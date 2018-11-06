@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.accp.mapper.SmbmsBillMapper"><!--使用dao接口--><!--面向接口编程-->
+
+    <resultMap id="BillMap" type="SmbmsBill">
+        <result property="id" column="id"/>
+        <result property="billCode" column="billCode"/>
+        <result property="productName" column="productName"/>
+        <result property="productDesc" column="productDesc"/>
+        <result property="productUnit" column="productUnit"/>
+        <result property="productCount" column="productCount"/>
+        <result property="totalPrice" column="totalPrice"/>
+        <result property="isPayment" column="isPayment"/>
+        <result property="createdBy" column="createdBy"/>
+        <result property="creationDate" column="creationDate"/>
+        <result property="modifyBy" column="modifyBy"/>
+        <result property="modifyDate" column="modifyDate"/>
+        <result property="providerId" column="providerId"/>
+        <association property="smbmsProvider" javaType="SmbmsProvider">
+            <result property="id" column="pid"/>
+            <result property="proCode" column="proCode"/>
+            <result property="proName" column="proName"/>
+            <result property="proDesc" column="proDesc"/>
+            <result property="proContact" column="proContact"/>
+        </association>
+    </resultMap>
+
+      <sql id="billwherePage">
+          <where>
+              <if test="smbmsBill.productName !=null and smbmsBill.productName!=''">
+                  and productName like concat('%',#{smbmsBill.productName},'%')
+              </if>
+              <if test="smbmsBill.providerId>0">
+                  and  providerId =#{smbmsBill.providerId}
+              </if>
+              <if test="smbmsBill.isPayment>0">
+                  and isPayment=#{smbmsBill.isPayment}
+              </if>
+          </where>
+      </sql>
+
+      <select id="billCount" resultType="_int">
+          select count(*) from smbms_bill
+           <include refid="billwherePage"/>
+      </select>
+
+    <select id="billList"  resultMap="BillMap">
+        select *,p.id pid from smbms_bill b left join smbms_provider p
+        on p.id=b.providerId
+        <include refid="billwherePage"/>
+        limit #{pageNo},#{pageSize}
+    </select>
+
+    <select id="viewBill" resultMap="BillMap">
+          select *,p.id pid from smbms_bill b left join smbms_provider p
+           on p.id=b.providerId where b.id=#{id}
+    </select>
+
+     <insert id="insertBill">
+         INSERT  INTO smbms_bill(id,billCode,productName,productDesc,productUnit,productCount,totalPrice,isPayment,createdBy,creationDate,providerId)
+         VALUES (default,#{billCode},#{productName},#{productDesc},#{productUnit},#{productCount},#{totalPrice},#{isPayment},#{createdBy},NOW(),#{providerId})
+     </insert>
+
+    <update id="updateBill">
+        update  smbms_bill
+        <set>
+            <if test="billCode !=null and billCode !=''">billCode=#{billCode},</if>
+            <if test="productName !=null and productName !=''">productName=#{productName},</if>
+            <if test="productDesc !=null and productDesc !=''">productDesc=#{productDesc},</if>
+            <if test="productUnit !=null and productUnit !=''">billCode=#{billCode},</if>
+            <if test="productCount>0">productCount=#{productCount},</if>
+            <if test="totalPrice>0">totalPrice=#{totalPrice},</if>
+            <if test="isPayment>0">isPayment=#{isPayment},</if>
+            <if test="providerId>0">providerId=#{providerId},</if>
+            <if test="modifyBy>0">modifyBy=#{modifyBy},</if>
+            <if test="modifyDate!=null or modifyDate==null">modifyDate=NOW(),</if>
+        </set>
+            where id=#{id}
+    </update>
+
+    <delete id="deleBill">
+        delete from smbms_bill where id=#{id}
+    </delete>
+
+</mapper>
